@@ -1,0 +1,22 @@
+*~
+model.log
+*/input.csv
+__pycache__
+.python-version
+output/*
+metadata/*
+
+
+# notebooks
+run.exe
+environ.txt
+
+# pyenv
+.python-version
+
+# jupyter
+.ipynb_checkpoints
+.ipython/
+.jupyter/
+.local/
+.idea/
