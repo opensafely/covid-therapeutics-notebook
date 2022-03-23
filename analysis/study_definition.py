@@ -311,7 +311,7 @@ study = StudyDefinition(
     eth = patients.with_these_clinical_events(
       ethnicity_primis_snomed_codes,
       returning = "category",
-      on_or_after = "start_date",
+      on_or_before = "start_date",
       find_first_match_in_period = True,
       include_date_of_match = False,
     ),
