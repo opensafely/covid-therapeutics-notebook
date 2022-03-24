@@ -21,7 +21,7 @@ actions:
         reports: output/cohort_reports_outputs/descriptives_input.html
 
   summary_html:
-    run: jupyter:latest jupyter nbconvert /workspace/notebooks/data_summary.ipynb --execute --to html --output-dir=/workspace/output --ExecutePreprocessor.timeout=86400
+    run: jupyter:latest jupyter nbconvert /workspace/notebooks/data_summary.ipynb --execute --to html --output-dir=/workspace/output --ExecutePreprocessor.timeout=86400 --debug
     needs: [generate_population]
     outputs:
       moderately_sensitive:
