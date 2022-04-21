@@ -50,14 +50,13 @@ study = StudyDefinition(
   population = patients.satisfying(
     """
     age_group != "missing"
-    AND (registered_op
-      OR registered_dc)
+    AND (registered_op OR registered_ip)
     """,
   ),
   
   
   
-  # OUTPATIENT TREATMENT - NEUTRALISING MONOCLONAL ANTIBODIES OR ANTIVIRALS ----
+  # OUTPATIENT TREATMENT (BlueTeq) - NEUTRALISING MONOCLONAL ANTIBODIES OR ANTIVIRALS ----
 
   # date of first outpatient treatment
   outpatient_covid_therapeutic_date = patients.with_covid_therapeutics(
@@ -92,49 +91,55 @@ study = StudyDefinition(
     },
   ), 
   
-
-  ### INPATIENT COVID TREATMENT 
+  
+  ### INPATIENT COVID TREATMENT (BlueTeq)
   # available from July 2020 
 
-  # # date of first inpatient treatment
-  # inpatient_covid_therapeutic_date = patients.with_covid_therapeutics(
-  #   with_these_indications = ["hospitalised_with", "hospital_onset"],
-  #   on_or_after = "index_date",
-  #   find_first_match_in_period = True,
-  #   returning = "date",
-  #   date_format = "YYYY-MM-DD",
-  #   return_expectations = {
-  #     "date": {"earliest": "index_date"},
-  #     "incidence": 0.05
-  #   },
-  # ), 
+  # date of first inpatient treatment
+  inpatient_covid_therapeutic_date = patients.with_covid_therapeutics(
+    with_these_indications = ["hospitalised_with", "hospital_onset"],
+    on_or_after = "index_date",
+    find_first_match_in_period = True,
+    returning = "date",
+    date_format = "YYYY-MM-DD",
+    return_expectations = {
+      "date": {"earliest": "index_date"},
+      "incidence": 0.05
+    },
+  ), 
   
-  # # name of first inpatient treatment
-  # inpatient_covid_therapeutic_name = patients.with_covid_therapeutics(
-  #   with_these_indications = ["hospitalised_with", "hospital_onset"],
-  #   on_or_after = "index_date",
-  #   find_first_match_in_period = True,
-  #   returning = "therapeutic",
-  #   return_expectations = {
-  #     "date": {"earliest": "index_date"},
-  #     "incidence": 0.05
-  #   },
-  # ), 
+  # name of first inpatient treatment
+  inpatient_covid_therapeutic_name = patients.with_covid_therapeutics(
+    with_these_indications = ["hospitalised_with", "hospital_onset"],
+    on_or_after = "index_date",
+    find_first_match_in_period = True,
+    returning = "therapeutic",
+    return_expectations = {
+      "category":{
+        "ratios": {'remdesivir':0.3, 
+                   'casirivimab and imdevimab':0.1, 
+                   'molnupiravir':0.2, 
+                   'sotrovimab': 0.3, 
+                   'paxlovid': 0.1},
+              },
+      "incidence": 0.8
+    },
+  ), 
   
   registered_op = patients.registered_as_of("outpatient_covid_therapeutic_date"),
-  # registered_ip = patients.registered_as_of("inpatient_covid_therapeutic_date"),
+  registered_ip = patients.registered_as_of("inpatient_covid_therapeutic_date"),
   
 
-
+  ############################
   ## Treated in hospital SUS data near time of recorded treatment
-  
+    ## NB this data lags behind the therapeutics/testing data so may be missing
+
   ### Any elective admission with COVID as primary diagnosis (with or without a recorded procedure)
-  ## NB this data lags behind the therapeutics/testing data so may be missing
-  hospital_admission_date = patients.admitted_to_hospital(
+  elective_admission_date = patients.admitted_to_hospital(
     returning = "date_admitted",
-    with_these_diagnoses = covid_icd10_codes,
+    with_these_primary_diagnoses = covid_icd10_codes,
     with_patient_classification = ["1", "2"], # ordinary or day case admissions only
-    with_admission_method = ['11', '12', '13'], ## elective
+    with_admission_method = ['11', '12', '13', '81'], ## elective (inc transfer)
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
     between = ["outpatient_covid_therapeutic_date - 3 days", "outpatient_covid_therapeutic_date + 3 days"],
     date_format = "YYYY-MM-DD",
@@ -146,14 +151,31 @@ study = StudyDefinition(
     },
   ),
 
-  # discharge date for spell above
-  hospital_discharge_date = patients.admitted_to_hospital(
-    returning = "date_discharged",
-    with_these_diagnoses = covid_icd10_codes,
-    with_patient_classification = ["1", "2"], # ordinary or day case admissions only
-    with_admission_method = ['11', '12', '13'], ## elective
+  # short stay elective (1-2 days)
+  elective_short_stay = patients.satisfying(
+    "elective_bed_days < 3",
+    # bed days (closest approximation of length of spell)
+    elective_bed_days = patients.admitted_to_hospital(
+      returning = "total_bed_days_in_period",
+      with_these_primary_diagnoses = covid_icd10_codes,
+      with_patient_classification = ["1", "2"], # ordinary or day case admissions only
+      with_admission_method = ['11', '12', '13', '81'], ## elective (inc transfer)
+      # see https://docs.opensafely.org/study-def-variables/#sus for more info
+      between = ["elective_admission_date", "elective_admission_date + 3 days"],
+    ),
+    return_expectations = {
+      "incidence": 0.8
+    }
+  ),
+
+  ### Day case admission with COVID as primary diagnosis (with or without a recorded procedure)
+  daycase_admission_date = patients.admitted_to_hospital(
+    returning = "date_admitted",
+    with_these_primary_diagnoses = covid_icd10_codes,
+    with_patient_classification = ["2"], # ordinary or day case admissions only
+    with_admission_method = ['11', '12', '13', '81'], ## elective (inc transfer)
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
-    between = ["hospital_admission_date", "hospital_admission_date"],
+    between = ["outpatient_covid_therapeutic_date - 3 days", "outpatient_covid_therapeutic_date + 3 days"],
     date_format = "YYYY-MM-DD",
     find_first_match_in_period = True,
     return_expectations = {
@@ -164,15 +186,17 @@ study = StudyDefinition(
   ),
 
   ### Treated with molnupiravir - procedure 'X748'
+  # none found in preliminary investigation
   
-  ### With procedure 'X892' Monoclonal antibodies band 2 (used for ronapreve) or continuous infusion
-  ## NB this data lags behind the therapeutics/testing data so need to filter in next step
-  hospital_admission_x892_date = patients.admitted_to_hospital(
+
+  ### Elective admission with procedure:
+  ###  'X892' Monoclonal antibodies band 2 (used for ronapreve)
+  elective_x892_date = patients.admitted_to_hospital(
     returning = "date_admitted",
     with_these_primary_diagnoses = covid_icd10_codes,
     with_these_procedures = codelist(['X892'], system='opcs4'),
     with_patient_classification = ["1", "2"], # ordinary or day case admissions only
-    with_admission_method = ['11', '12', '13'], ## elective
+    with_admission_method = ['11', '12', '13', '81'], ## elective (inc transfer)
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
     between = ["outpatient_covid_therapeutic_date - 3 days", "outpatient_covid_therapeutic_date + 3 days"],
     date_format = "YYYY-MM-DD",
@@ -184,14 +208,14 @@ study = StudyDefinition(
     },
   ),
   
-  ### With procedure 'X292' continuous infusion of therapeutic substance
-  ## NB this data lags behind the therapeutics/testing data so need to filter in next step
-  hospital_admission_x292_date = patients.admitted_to_hospital(
+  ### Elective admission With procedure: 
+  ### 'X292' continuous infusion of therapeutic substance
+  elective_x292_date = patients.admitted_to_hospital(
     returning = "date_admitted",
     with_these_primary_diagnoses = covid_icd10_codes,
     with_these_procedures = codelist(['X292'], system='opcs4'),
     with_patient_classification = ["1", "2"], # ordinary or day case admissions only
-    with_admission_method = ['11', '12', '13'], ## elective
+    with_admission_method = ['11', '12', '13', '81'], ## elective (inc transfer)
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
     between = ["outpatient_covid_therapeutic_date - 3 days", "outpatient_covid_therapeutic_date + 3 days"],
     date_format = "YYYY-MM-DD",
@@ -203,10 +227,9 @@ study = StudyDefinition(
     },
   ),
   
-  
 
 
-  ## Treated in hospital as outpatient
+  ## Hospital outpatient appointment (SUS)
 
   ## NB this data lags behind the therapeutics/testing data so need to filter in next step
   # diagnoses are rarely coded in outpatient data
@@ -223,32 +246,69 @@ study = StudyDefinition(
     },
   ),
 
-
-  ## Study start date for extracting variables
-  sus_treatment_date = patients.minimum_of(
-    "hospital_admission_date",
-    "hospital_attendance_date"
-  ),
-  
-  registered_sus = patients.registered_as_of("sus_treatment_date"),
-
-  start_date = patients.minimum_of(
-    "outpatient_covid_therapeutic_date",
-    #"inpatient_covid_therapeutic_date",
-    "sus_treatment_date"
-  ),
-
-
-  ## Treated in hospital SUS data -- independent of date of any appearance in therapeutics data 
-  
-  ### Any day case with COVID as primary diagnosis (with or without a recorded procedure)
-  ## NB this data lags behind the therapeutics/testing data so may be missing
-  hospital_daycase_date = patients.admitted_to_hospital(
+  ### To match with Blueteq INPATIENT treatment
+  ### Emergency admission (SUS) Without procedure: 
+  emergency_admission_date = patients.admitted_to_hospital(
     returning = "date_admitted",
-    with_these_primary_diagnoses = covid_icd10_codes,
-    with_patient_classification = ["2"], # day case admissions only
+    with_these_diagnoses = covid_icd10_codes,
+    # all emergency admissions and transfers (excluding births and maternity admissions)
+    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
-    on_or_after = "index_date",
+    on_or_before = "inpatient_covid_therapeutic_date",
+    date_format = "YYYY-MM-DD",
+    find_first_match_in_period = True,
+    return_expectations = {
+      "date": {"earliest": "index_date"},
+      "rate": "uniform",
+      "incidence": 0.05
+    },
+  ),
+  
+  ### [Discharge date] Emergency admission (SUS) without procedure: 
+  emergency_discharge_date = patients.admitted_to_hospital(
+    returning = "date_discharged",
+    with_these_diagnoses = covid_icd10_codes,
+    # all emergency admissions and transfers (excluding births and maternity admissions)
+    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    # see https://docs.opensafely.org/study-def-variables/#sus for more info
+    between = ["emergency_admission_date","emergency_admission_date"],
+    date_format = "YYYY-MM-DD",
+    find_first_match_in_period = True,
+    return_expectations = {
+      "date": {"earliest": "index_date"},
+      "rate": "uniform",
+      "incidence": 0.05
+    },
+  ),
+  ### Emergency admission (SUS) With procedure: 
+  ### 'X892' Monoclonal antibodies band 2 (used for ronapreve)
+  emergency_admission_x892_date = patients.admitted_to_hospital(
+    returning = "date_admitted",
+    with_these_diagnoses = covid_icd10_codes,
+    with_these_procedures = codelist(['X292'], system='opcs4'),
+    # all emergency admissions and transfers (excluding births and maternity admissions)
+    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    # see https://docs.opensafely.org/study-def-variables/#sus for more info
+    on_or_before = "inpatient_covid_therapeutic_date",
+    date_format = "YYYY-MM-DD",
+    find_first_match_in_period = True,
+    return_expectations = {
+      "date": {"earliest": "index_date"},
+      "rate": "uniform",
+      "incidence": 0.05
+    },
+  ),
+  
+  ### [Discharge date] Emergency admission (SUS) With procedure: 
+  ### 'X892' Monoclonal antibodies band 2 (used for ronapreve)
+  emergency_discharge_x892_date = patients.admitted_to_hospital(
+    returning = "date_discharged",
+    with_these_diagnoses = covid_icd10_codes,
+    with_these_procedures = codelist(['X292'], system='opcs4'),
+    # all emergency admissions and transfers (excluding births and maternity admissions)
+    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    # see https://docs.opensafely.org/study-def-variables/#sus for more info
+    between = ["emergency_admission_x892_date","emergency_admission_x892_date"],
     date_format = "YYYY-MM-DD",
     find_first_match_in_period = True,
     return_expectations = {
@@ -258,35 +318,66 @@ study = StudyDefinition(
     },
   ),
 
-  registered_dc = patients.registered_as_of("hospital_daycase_date"),
 
-  ## identify patients with day case who were not included as
-  #  having therapeutics and related hospital admission
-  dc_cohort = patients.classified_as("""
-    registered_dc
-    AND NOT hospital_admission_date 
-    """),
-  
-# OUTPATIENT TREATMENT - within 3 days of hospital treatment
-
-  # date of first outpatient treatment
-  outpatient_covid_therapeutic_date = patients.with_covid_therapeutics(
-    #with_these_statuses = ["Approved", "Treatment Complete"],
-    with_these_indications = "non_hospitalised",
-    between = ["hospital_daycase_date - 3 days","hospital_daycase_date + 3 days"],
-    find_first_match_in_period = True,
-    returning = "date",
+    ### Emergency admission (SUS) With procedure: 
+  ### 'X292' continuous infusion of therapeutic substance
+  emergency_admission_x292_date = patients.admitted_to_hospital(
+    returning = "date_admitted",
+    with_these_diagnoses = covid_icd10_codes,
+    with_these_procedures = codelist(['X292'], system='opcs4'),
+    # all emergency admissions and transfers (excluding births and maternity admissions)
+    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'], 
+    # see https://docs.opensafely.org/study-def-variables/#sus for more info
+    on_or_before = "inpatient_covid_therapeutic_date",
     date_format = "YYYY-MM-DD",
+    find_first_match_in_period = True,
     return_expectations = {
       "date": {"earliest": "index_date"},
-      "incidence": 0.8
+      "rate": "uniform",
+      "incidence": 0.05
     },
-  ), 
+  ),
   
+  ### [Discharge date] Emergency admission (SUS) With procedure: 
+  ### 'X292' continuous infusion of therapeutic substance
+  emergency_discharge_x292_date = patients.admitted_to_hospital(
+    returning = "date_discharged",
+    with_these_diagnoses = covid_icd10_codes,
+    with_these_procedures = codelist(['X292'], system='opcs4'),
+    # all emergency admissions and transfers (excluding births and maternity admissions)
+    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    # see https://docs.opensafely.org/study-def-variables/#sus for more info
+    between = ["emergency_admission_x292_date","emergency_admission_x292_date"],
+    date_format = "YYYY-MM-DD",
+    find_first_match_in_period = True,
+    return_expectations = {
+      "date": {"earliest": "index_date"},
+      "rate": "uniform",
+      "incidence": 0.05
+    },
+  ),
+
+  ## Study start date for extracting variables
+  sus_treatment_date = patients.minimum_of(
+    "elective_admission_date",
+    "hospital_attendance_date",
+    "emergency_admission_date"
+  ),
   
+  start_date = patients.minimum_of(
+    "outpatient_covid_therapeutic_date",
+    "inpatient_covid_therapeutic_date",
+    "sus_treatment_date"
+  ),
+
+
+
+  
+ 
   ## Blueteq ‘high risk’ cohort 
+  ## only present for 3 drugs currently
   high_risk_cohort_covid_therapeutics = patients.with_covid_therapeutics(
-    with_these_indications = "non_hospitalised",
+    #with_these_indications = "non_hospitalised", 
     on_or_after = "index_date",
     find_first_match_in_period = True,
     returning = "risk_group",
