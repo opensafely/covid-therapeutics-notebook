@@ -104,7 +104,7 @@ study = StudyDefinition(
     date_format = "YYYY-MM-DD",
     return_expectations = {
       "date": {"earliest": "index_date"},
-      "incidence": 0.05
+      "incidence": 0.8
     },
   ), 
   
@@ -117,10 +117,12 @@ study = StudyDefinition(
     return_expectations = {
       "category":{
         "ratios": {'remdesivir':0.3, 
-                   'casirivimab and imdevimab':0.1, 
-                   'molnupiravir':0.2, 
-                   'sotrovimab': 0.3, 
-                   'paxlovid': 0.1},
+                   'casirivimab and imdevimab':0.05, 
+                   'molnupiravir':0.15, 
+                   'sotrovimab': 0.2, 
+                   'paxlovid': 0.1,
+                   'tocilizumab': 0.1,
+                   'sarilumab':0.1},
               },
       "incidence": 0.8
     },
@@ -261,7 +263,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.5
     },
   ),
   
@@ -277,7 +279,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.5
     },
   ),
   ### Admission (SUS) With procedure: 
@@ -294,7 +296,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.3
     },
   ),
   
@@ -312,7 +314,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.3
     },
   ),
 
@@ -331,7 +333,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.3
     },
   ),
   
@@ -349,7 +351,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.3
     },
   ),
 
