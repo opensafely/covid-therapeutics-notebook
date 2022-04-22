@@ -183,7 +183,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.5
     },
   ),
 
@@ -206,7 +206,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.1
     },
   ),
   
@@ -225,7 +225,7 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.1
     },
   ),
   
@@ -244,10 +244,18 @@ study = StudyDefinition(
     return_expectations = {
       "date": {"earliest": "index_date"},
       "rate": "uniform",
-      "incidence": 0.05
+      "incidence": 0.1
     },
   ),
 
+  #  sus or op
+  elective_or_op = patients.satisfying(
+    '''elective_short_stay OR
+    hospital_attendance_date ''',
+    return_expectations = {
+      "incidence": 0.5
+    },
+  ),
 
 
   ### To match with Blueteq INPATIENT treatment
