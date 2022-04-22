@@ -246,13 +246,14 @@ study = StudyDefinition(
     },
   ),
 
+
+
   ### To match with Blueteq INPATIENT treatment
-  ### Emergency admission (SUS) Without procedure: 
-  emergency_admission_date = patients.admitted_to_hospital(
+  ### Any admission (SUS) (include elective in case of hospital-onset COVID) Without procedure: 
+  any_admission_date = patients.admitted_to_hospital(
     returning = "date_admitted",
     with_these_diagnoses = covid_icd10_codes,
-    # all emergency admissions and transfers (excluding births and maternity admissions)
-    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    with_patient_classification = ["1"], # ordinary admissions only
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
     on_or_before = "inpatient_covid_therapeutic_date",
     date_format = "YYYY-MM-DD",
@@ -264,14 +265,13 @@ study = StudyDefinition(
     },
   ),
   
-  ### [Discharge date] Emergency admission (SUS) without procedure: 
-  emergency_discharge_date = patients.admitted_to_hospital(
+  ### [Discharge date] Any admission (SUS) without procedure: 
+  any_discharge_date = patients.admitted_to_hospital(
     returning = "date_discharged",
     with_these_diagnoses = covid_icd10_codes,
-    # all emergency admissions and transfers (excluding births and maternity admissions)
-    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    with_patient_classification = ["1"], # ordinary admissions only
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
-    between = ["emergency_admission_date","emergency_admission_date"],
+    between = ["any_admission_date","any_admission_date"],
     date_format = "YYYY-MM-DD",
     find_first_match_in_period = True,
     return_expectations = {
@@ -280,14 +280,13 @@ study = StudyDefinition(
       "incidence": 0.05
     },
   ),
-  ### Emergency admission (SUS) With procedure: 
+  ### Admission (SUS) With procedure: 
   ### 'X892' Monoclonal antibodies band 2 (used for ronapreve)
-  emergency_admission_x892_date = patients.admitted_to_hospital(
+  any_admission_x892_date = patients.admitted_to_hospital(
     returning = "date_admitted",
     with_these_diagnoses = covid_icd10_codes,
     with_these_procedures = codelist(['X292'], system='opcs4'),
-    # all emergency admissions and transfers (excluding births and maternity admissions)
-    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    with_patient_classification = ["1"], # ordinary admissions only
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
     on_or_before = "inpatient_covid_therapeutic_date",
     date_format = "YYYY-MM-DD",
@@ -299,16 +298,15 @@ study = StudyDefinition(
     },
   ),
   
-  ### [Discharge date] Emergency admission (SUS) With procedure: 
+  ### [Discharge date] Admission (SUS) With procedure: 
   ### 'X892' Monoclonal antibodies band 2 (used for ronapreve)
-  emergency_discharge_x892_date = patients.admitted_to_hospital(
+  any_discharge_x892_date = patients.admitted_to_hospital(
     returning = "date_discharged",
     with_these_diagnoses = covid_icd10_codes,
     with_these_procedures = codelist(['X292'], system='opcs4'),
-    # all emergency admissions and transfers (excluding births and maternity admissions)
-    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    with_patient_classification = ["1"], # ordinary admissions only
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
-    between = ["emergency_admission_x892_date","emergency_admission_x892_date"],
+    between = ["any_admission_x892_date","any_admission_x892_date"],
     date_format = "YYYY-MM-DD",
     find_first_match_in_period = True,
     return_expectations = {
@@ -319,14 +317,13 @@ study = StudyDefinition(
   ),
 
 
-    ### Emergency admission (SUS) With procedure: 
+    ### Admission (SUS) With procedure: 
   ### 'X292' continuous infusion of therapeutic substance
-  emergency_admission_x292_date = patients.admitted_to_hospital(
+  any_admission_x292_date = patients.admitted_to_hospital(
     returning = "date_admitted",
     with_these_diagnoses = covid_icd10_codes,
     with_these_procedures = codelist(['X292'], system='opcs4'),
-    # all emergency admissions and transfers (excluding births and maternity admissions)
-    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'], 
+    with_patient_classification = ["1"], # ordinary admissions only
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
     on_or_before = "inpatient_covid_therapeutic_date",
     date_format = "YYYY-MM-DD",
@@ -338,16 +335,15 @@ study = StudyDefinition(
     },
   ),
   
-  ### [Discharge date] Emergency admission (SUS) With procedure: 
+  ### [Discharge date] Admission (SUS) With procedure: 
   ### 'X292' continuous infusion of therapeutic substance
-  emergency_discharge_x292_date = patients.admitted_to_hospital(
+  any_discharge_x292_date = patients.admitted_to_hospital(
     returning = "date_discharged",
     with_these_diagnoses = covid_icd10_codes,
     with_these_procedures = codelist(['X292'], system='opcs4'),
-    # all emergency admissions and transfers (excluding births and maternity admissions)
-    with_admission_method = ['21', '2A', '22', '23', '24', '25', '2D', '28', '2B'],
+    with_patient_classification = ["1"], # ordinary admissions only
     # see https://docs.opensafely.org/study-def-variables/#sus for more info
-    between = ["emergency_admission_x292_date","emergency_admission_x292_date"],
+    between = ["any_admission_x292_date","any_admission_x292_date"],
     date_format = "YYYY-MM-DD",
     find_first_match_in_period = True,
     return_expectations = {
@@ -357,17 +353,10 @@ study = StudyDefinition(
     },
   ),
 
-  ## Study start date for extracting variables
-  sus_treatment_date = patients.minimum_of(
-    "elective_admission_date",
-    "hospital_attendance_date",
-    "emergency_admission_date"
-  ),
-  
+  ## Study start date for extracting variables  
   start_date = patients.minimum_of(
     "outpatient_covid_therapeutic_date",
-    "inpatient_covid_therapeutic_date",
-    "sus_treatment_date"
+    "inpatient_covid_therapeutic_date"
   ),
 
 
