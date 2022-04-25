@@ -166,7 +166,7 @@ study = StudyDefinition(
       between = ["elective_admission_date", "elective_admission_date + 3 days"],
     ),
     return_expectations = {
-      "incidence": 0.8
+      "incidence": 0.7
     }
   ),
 
@@ -253,7 +253,7 @@ study = StudyDefinition(
     '''elective_short_stay OR
     hospital_attendance_date ''',
     return_expectations = {
-      "incidence": 0.5
+      "incidence": 0.8
     },
   ),
 
