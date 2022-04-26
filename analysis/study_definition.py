@@ -442,39 +442,39 @@ study = StudyDefinition(
     }
   ),
   
-  ## Ethnicity
-  ethnicity = patients.categorised_as({
-        "0": "DEFAULT",
-        "1": "eth='1' OR (NOT eth AND ethnicity_sus='1')",
-        "2": "eth='2' OR (NOT eth AND ethnicity_sus='2')",
-        "3": "eth='3' OR (NOT eth AND ethnicity_sus='3')",
-        "4": "eth='4' OR (NOT eth AND ethnicity_sus='4')",
-        "5": "eth='5' OR (NOT eth AND ethnicity_sus='5')",
-    },
-    return_expectations={
-        "category": {
-            "ratios": {
-                "1": 0.2,
-                "2": 0.2,
-                "3": 0.2,
-                "4": 0.2,
-                "5": 0.2
-                }
-            },
-        "incidence": 0.8,
-      },
-    eth = patients.with_these_clinical_events(
-      ethnicity_primis_snomed_codes,
-      returning = "category",
-      on_or_before = "start_date",
-      find_first_match_in_period = True,
-      include_date_of_match = False,
-    ),
-    ethnicity_sus = patients.with_ethnicity_from_sus(
-      returning = "group_6",  
-      use_most_frequent_code = True,
-    ),
-  ),
+#   ## Ethnicity
+#   ethnicity = patients.categorised_as({
+#         "0": "DEFAULT",
+#         "1": "eth='1' OR (NOT eth AND ethnicity_sus='1')",
+#         "2": "eth='2' OR (NOT eth AND ethnicity_sus='2')",
+#         "3": "eth='3' OR (NOT eth AND ethnicity_sus='3')",
+#         "4": "eth='4' OR (NOT eth AND ethnicity_sus='4')",
+#         "5": "eth='5' OR (NOT eth AND ethnicity_sus='5')",
+#     },
+#     return_expectations={
+#         "category": {
+#             "ratios": {
+#                 "1": 0.2,
+#                 "2": 0.2,
+#                 "3": 0.2,
+#                 "4": 0.2,
+#                 "5": 0.2
+#                 }
+#             },
+#         "incidence": 0.8,
+#       },
+#     eth = patients.with_these_clinical_events(
+#       ethnicity_primis_snomed_codes,
+#       returning = "category",
+#       on_or_before = "start_date",
+#       find_first_match_in_period = True,
+#       include_date_of_match = False,
+#     ),
+#     ethnicity_sus = patients.with_ethnicity_from_sus(
+#       returning = "group_6",  
+#       use_most_frequent_code = True,
+#     ),
+#   ),
   
   ## Index of multiple deprivation
   imd = patients.categorised_as(
@@ -583,42 +583,42 @@ study = StudyDefinition(
   
   # CLINICAL GROUPS ----
   
-  ## Care home 
-  care_home_primis = patients.with_these_clinical_events(
-    care_home_primis_snomed_codes,
-    returning = "binary_flag",
-    on_or_before = "start_date",
-    return_expectations = {"incidence": 0.15,}
-  ),
+#   ## Care home 
+#   care_home_primis = patients.with_these_clinical_events(
+#     care_home_primis_snomed_codes,
+#     returning = "binary_flag",
+#     on_or_before = "start_date",
+#     return_expectations = {"incidence": 0.15,}
+#   ),
   
-  ## Housebound
-  housebound_opensafely = patients.satisfying(
-    """housebound_date
-                AND NOT no_longer_housebound
-                AND NOT moved_into_care_home""",
-    return_expectations={
-      "incidence": 0.01,
-    },
+#   ## Housebound
+#   housebound_opensafely = patients.satisfying(
+#     """housebound_date
+#                 AND NOT no_longer_housebound
+#                 AND NOT moved_into_care_home""",
+#     return_expectations={
+#       "incidence": 0.01,
+#     },
     
-    housebound_date = patients.with_these_clinical_events( 
-      housebound_opensafely_snomed_codes, 
-      on_or_before = "start_date",
-      find_last_match_in_period = True,
-      returning = "date",
-      date_format = "YYYY-MM-DD",
-    ),   
+#     housebound_date = patients.with_these_clinical_events( 
+#       housebound_opensafely_snomed_codes, 
+#       on_or_before = "start_date",
+#       find_last_match_in_period = True,
+#       returning = "date",
+#       date_format = "YYYY-MM-DD",
+#     ),   
     
-    no_longer_housebound = patients.with_these_clinical_events( 
-      no_longer_housebound_opensafely_snomed_codes, 
-      on_or_after = "housebound_date",
-    ),
+#     no_longer_housebound = patients.with_these_clinical_events( 
+#       no_longer_housebound_opensafely_snomed_codes, 
+#       on_or_after = "housebound_date",
+#     ),
     
-    moved_into_care_home = patients.with_these_clinical_events(
-      care_home_primis_snomed_codes,
-      on_or_after = "housebound_date",
-    ),
+#     moved_into_care_home = patients.with_these_clinical_events(
+#       care_home_primis_snomed_codes,
+#       on_or_after = "housebound_date",
+#     ),
     
-  ),
+#   ),
   
   
 )
