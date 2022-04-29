@@ -98,12 +98,12 @@ study = StudyDefinition(
   # date of first inpatient treatment
   inpatient_covid_therapeutic_date = patients.with_covid_therapeutics(
     with_these_indications = ["hospitalised_with", "hospital_onset"],
-    on_or_after = "index_date",
+    on_or_after = "2020-06-01",
     find_first_match_in_period = True,
     returning = "date",
     date_format = "YYYY-MM-DD",
     return_expectations = {
-      "date": {"earliest": "index_date"},
+      "date": {"earliest": "2020-06-01"},
       "incidence": 0.8
     },
   ), 
@@ -111,7 +111,7 @@ study = StudyDefinition(
   # name of first inpatient treatment
   inpatient_covid_therapeutic_name = patients.with_covid_therapeutics(
     with_these_indications = ["hospitalised_with", "hospital_onset"],
-    on_or_after = "index_date",
+    on_or_after = "2020-06-01",
     find_first_match_in_period = True,
     returning = "therapeutic",
     return_expectations = {
@@ -525,8 +525,8 @@ study = StudyDefinition(
   ),
   
   region_covid_therapeutics = patients.with_covid_therapeutics(
-    with_these_indications = "non_hospitalised",
-    on_or_after = "start_date",
+    #with_these_indications = "non_hospitalised",
+    on_or_after = "2020-06-01",
     find_first_match_in_period = True,
     returning = "region",
     return_expectations = {
