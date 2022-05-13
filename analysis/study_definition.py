@@ -159,7 +159,7 @@ study = StudyDefinition(
 
   # short stay elective (1-2 days)
   elective_short_stay = patients.satisfying(
-    "0 < elective_bed_days < 3",
+    "elective_bed_days > 0 AND elective_bed_days < 3",
     # bed days (closest approximation of length of spell)
     elective_bed_days = patients.admitted_to_hospital(
       returning = "total_bed_days_in_period",
