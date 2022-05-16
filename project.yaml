@@ -26,3 +26,5 @@ actions:
     outputs:
       moderately_sensitive:
         html: output/data_summary.html
+        ip_csvs: output/Inpatient*.csv
+        op_csvs: output/Outpatient*.csv
