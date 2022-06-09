@@ -17,6 +17,7 @@ def redact_small_numbers(df, n, rate_column):
     # round to nearest five
     for c in df.columns:
         df[c] = ((df[c]/5).round(0)*5).astype(int)
+        df[c] = df[c].replace([0, 5], np.nan)
 
     def suppress_column(column):   
         suppressed_count = column[column<=n].sum()
