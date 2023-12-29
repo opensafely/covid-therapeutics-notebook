@@ -1,0 +1,159 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: all
+#     notebook_metadata_filter: all,-language_info
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.3.3
+#   kernelspec:
+#     display_name: Python 3
+#     language: python
+#     name: python3
+# ---
+
+# + [markdown]
+# # COVID therapeutics dataset in OpenSAFELY-TPP
+#
+# This notebook displays information about the Therapeutics dataset within the OpenSAFELY-TPP database. It is part of the technical documentation of the OpenSAFELY platform to help users understand the underlying data and guide analyses. 
+#
+# If you want to see the Python code used to create this notebook, you can [view it on GitHub](https://github.com/opensafely/covid-therapeutics-notebooks/blob/master/notebooks/therapeuticss-description.ipynb).
+#
+# **Note: all row/patient counts are rounded to the nearest 10 and counts <=5 removed**
+
+
+# +
+## Import libraries
+
+# %load_ext autoreload
+# %autoreload 2
+
+import pyodbc
+import os
+import pandas as pd
+import numpy as np
+from datetime import date, datetime
+from IPython.display import display, Markdown
+
+import sys
+sys.path.append('../lib/')
+from utilities2 import *
+from sense_checking import *
+
+pd.set_option('display.max_colwidth', 250)
+
+
+# get the server credentials from environ.txt
+dbconn = os.environ.get('FULL_DATABASE_URL', None).strip('"')
+# -
+
+
+# ### Notebook run date
+
+display(Markdown(f"""This notebook was run on {date.today().strftime('%Y-%m-%d')}.  The information below reflects the state of this dataset in OpenSAFELY-TPP as at this date."""))
+
+# +
+## Import schema
+
+table = "Therapeutics"
+where = {"": None,
+         "_non_hospitalised": "where COVID_indication='non_hospitalised'"}
+
+get_schema(dbconn, table, where)
+# -
+
+# ### Reusable functions
+
+# +
+columns = ["Diagnosis", "FormName", "Region", "Der_LoadDate", "AgeAtReceivedDate", "Count"]
+threshold = 50
+    
+counts_of_distinct_values(dbconn, table, columns, threshold=threshold, include_counts=False)
+# -
+
+# ## Fields which are interesting to look at for non-hospitalised cohort seperately
+
+# +
+counts_of_distinct_values(dbconn, table, columns=['COVID_indication'], threshold=threshold)
+
+columns = ['Intervention','CurrentStatus']
+
+for c in columns:
+    counts_of_distinct_values(dbconn, table, columns=[c], threshold=threshold)   
+    counts_of_distinct_values(dbconn, table, columns=[c], threshold=threshold, where="COVID_indication='non_hospitalised'")   
+# -
+
+# ## Dates
+
+# +
+columns = ["Received", "TreatmentStartDate"]
+ 
+counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold)  
+counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold, where="COVID_indication='non_hospitalised'", sort_values=True)   
+
+# -
+
+# ### Dates outside expected range
+
+# +
+
+for i in [0,1]:
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'{date.today().strftime('%Y-%m-%d')}'", sort_values=True) 
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-20'", sort_values=True) 
+# -
+
+# ### Date comparisons
+
+# +
+columns = ["Received", "TreatmentStartDate"]
+ 
+counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold)  
+counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold, where="COVID_indication='non_hospitalised'", sort_values=True)   
+
+display(Markdown("## Past and future dates"))
+for i in [0,1]:
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'{date.today().strftime('%Y-%m-%d')}'", sort_values=True) 
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-20'", sort_values=True) 
+# -
+
+# ## Symptom onset dates and At-Risk groups
+
+# +
+columns = ["MOL1_onset_of_symptoms", "SOT02_onset_of_symptoms", "CASIM05_date_of_symptom_onset"]
+interventions = ['Molnupiravir', 'Sotrovimab', 'Casirivimab and imdevimab']
+thresholds = [50, 50, 1]
+
+for c, i, t in zip(columns, interventions, thresholds):
+    counts_of_distinct_values(dbconn, table, columns=[c], threshold=t, where="COVID_indication='non_hospitalised'")  
+    counts_of_distinct_values(dbconn, table, columns=[c], threshold=t, where=f"COVID_indication='non_hospitalised' AND Intervention='{i}'")  
+
+
+
+# +
+columns = ["MOL1_high_risk_cohort", "SOT02_risk_cohorts", "CASIM05_risk_cohort"]
+date_columns = ["MOL1_onset_of_symptoms", "SOT02_onset_of_symptoms", "CASIM05_date_of_symptom_onset"]
+interventions = ['Molnupiravir', 'Sotrovimab', 'Casirivimab and imdevimab']
+thresholds = [50, 50, 1]
+
+for c, i, d in zip(columns, interventions, date_columns):
+    counts_of_distinct_values(dbconn, table, columns=[c], threshold=50, where=f"COVID_indication='non_hospitalised' AND Intervention='{i}'")  
+    #counts_of_distinct_values(dbconn, table, columns=[c], threshold=5, where=f"COVID_indication='non_hospitalised' AND Intervention='{i}' AND {d} IS NOT NULL")  
+
+# -
+
+# # Patients with multiple records
+
+counts_of_distinct_values(dbconn, table, columns=["patient_id"], threshold=50, where=f"COVID_indication='non_hospitalised'")  
+
+# ## Further investigation into patients with multiple records - which fields differ in each record?
+
+# +
+where=f"COVID_indication='non_hospitalised'"
+fields_of_interest = ["AgeAtReceivedDate", "Received", "Intervention", "CurrentStatus", "TreatmentStartDate", "Region", "MOL1_high_risk_cohort", "SOT02_risk_cohorts", "CASIM05_risk_cohort"]
+combinations = {1: ["Intervention", "Received"],
+                2: ["Intervention", "TreatmentStartDate"],}
+
+
+multiple_records(dbconn, table, fields_of_interest, combinations, where)
