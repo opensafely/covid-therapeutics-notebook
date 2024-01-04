@@ -52,7 +52,7 @@ dbconn = os.environ.get('FULL_DATABASE_URL', None).strip('"')
 
 # ### Notebook run date
 
-display(Markdown(f"""This notebook was run on {date.today().strftime('%Y-%m-%d')}.  The information below reflects the state of this dataset in OpenSAFELY-TPP as at this date."""))
+display(Markdown(f"""This notebook was run on {date.today().strftime('%Y-%m-%d')}. The information below reflects the state of this dataset in OpenSAFELY-TPP as at this date. The last final update of the data was on 28/6/2023."""))
 
 # +
 ## Import schema
@@ -100,8 +100,8 @@ counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold, w
 # +
 
 for i in [0,1]:
-    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'{date.today().strftime('%Y-%m-%d')}'", sort_values=True) 
-    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-20'", sort_values=True) 
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'2023-06-28'", sort_values=True) 
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-16'", sort_values=True) 
 # -
 
 # ### Date comparisons
@@ -114,8 +114,8 @@ counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold, w
 
 display(Markdown("## Past and future dates"))
 for i in [0,1]:
-    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'{date.today().strftime('%Y-%m-%d')}'", sort_values=True) 
-    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-20'", sort_values=True) 
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'2023-06-28'", sort_values=True) 
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-16'", sort_values=True) 
 # -
 
 # ## Symptom onset dates and At-Risk groups
