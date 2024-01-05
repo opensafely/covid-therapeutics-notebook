@@ -375,7 +375,7 @@ def multiple_records(dbconn, table, columns, combinations, where, key_field="pat
     if where:
         display(Markdown(f" **filtered on {where}**"))
     display(df.rename(columns={0:"Patient count"}).sort_values(by="Patient count", ascending=False))
-    display(Markdown("#### Fields with counts <=5:"),
+    display(Markdown("#### Fields with counts <=7:"),
                      Markdown(", ".join(suppressed.index)))
     
     
