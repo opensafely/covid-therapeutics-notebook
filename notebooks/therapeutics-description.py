@@ -118,7 +118,9 @@ compare_two_values(dbconn, table, columns=columns, where="COVID_indication='non_
 display(Markdown("## Past and future dates"))
 for i in [0,1]:
     counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'2023-06-28'", sort_values=True) 
-    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-16'", sort_values=True) 
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) >'2023-06-28'", sort_values=True)
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) <'2021-12-16'", sort_values=True)
+    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-16'", sort_values=True)
 # -
 
 # ## Symptom onset dates and At-Risk groups
