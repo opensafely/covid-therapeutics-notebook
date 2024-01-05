@@ -6,7 +6,7 @@ from IPython.display import display, Markdown
 
 import sys
 sys.path.append('../lib/')
-from utilities2 import *
+from utilities2 import closing_connection, simple_sql, suppress_and_round
 
 
 def get_schema(dbconn, table, where, supplementary_table_separator=None, export=False):

@@ -39,8 +39,13 @@ from IPython.display import display, Markdown
 
 import sys
 sys.path.append('../lib/')
-from utilities2 import *
-from sense_checking import *
+from sense_checking import (
+    compare_two_values,
+    counts_of_distinct_values,
+    get_schema,
+    identify_distinct_strings,
+    multiple_records
+)
 
 pd.set_option('display.max_colwidth', 250)
 
