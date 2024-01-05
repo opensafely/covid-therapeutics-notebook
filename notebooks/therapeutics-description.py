@@ -21,7 +21,7 @@
 #
 # If you want to see the Python code used to create this notebook, you can [view it on GitHub](https://github.com/opensafely/covid-therapeutics-notebooks/blob/master/notebooks/therapeuticss-description.ipynb).
 #
-# **Note: all row/patient counts are rounded to the nearest 10 and counts <=5 removed**
+# **Note: all row/patient counts are rounded to the nearest 5 and counts <=7 removed**
 
 
 # +
@@ -111,6 +111,9 @@ columns = ["Received", "TreatmentStartDate"]
  
 counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold)  
 counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold, where="COVID_indication='non_hospitalised'", sort_values=True)   
+
+compare_two_values(dbconn, table, columns=columns, include_counts=True)
+compare_two_values(dbconn, table, columns=columns, where="COVID_indication='non_hospitalised'", include_counts=True)
 
 display(Markdown("## Past and future dates"))
 for i in [0,1]:

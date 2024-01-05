@@ -192,7 +192,7 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
 def compare_two_values(dbconn, tables, columns, join_on=None, threshold=1, where=None, include_counts=True):
     ''' Compare two columns (e.g ints, dates) based on their values
     Optionally filter using a where clause. 
-    Row counts are rounded to nearest 5 and any values which appear <=5 times not shown.
+    Row counts are rounded to nearest 5 and any values which appear <=7 times not shown.
     
     Inputs:
     dbconn (str): database connection details
@@ -296,7 +296,7 @@ def compare_two_values(dbconn, tables, columns, join_on=None, threshold=1, where
     
     # calculate percentages
     compared["%"] = round(100*compared["row_count"]/compared["row_count"].sum(),1)
-    compared["row_count"] = compared["row_count"].replace([0,1,2,3,4,5],"<=5")
+    compared["row_count"] = compared["row_count"].replace([0,1,2,3,4,5,6,7],"<=7")
     display(compared)
     
     
