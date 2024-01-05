@@ -148,6 +148,16 @@ for c, i, d in zip(columns, interventions, date_columns):
 
 # -
 
+# # Distinct risk groups
+    
+columns = ["MOL1_high_risk_cohort", "SOT02_risk_cohorts", "CASIM05_risk_cohort"]
+replacement = "Patients with a "
+split_string = ' and '
+merge_all = True
+
+identify_distinct_strings(dbconn, table, columns, replacement=replacement, split_string=split_string, merge_all=merge_all)
+identify_distinct_strings(dbconn, table, columns, where=f"COVID_indication='non_hospitalised'", replacement=replacement, split_string=split_string, merge_all=merge_all)
+
 # # Patients with multiple records
 
 counts_of_distinct_values(dbconn, table, columns=["patient_id"], threshold=50, where=f"COVID_indication='non_hospitalised'")  
