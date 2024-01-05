@@ -67,7 +67,7 @@ get_schema(dbconn, table, where)
 # ### Reusable functions
 
 # +
-columns = ["Diagnosis", "FormName", "Region", "Der_LoadDate", "AgeAtReceivedDate", "Count"]
+columns = ["Diagnosis", "FormName", "Region", "Der_LoadDate", "AgeAtReceivedDate"]
 threshold = 50
     
 counts_of_distinct_values(dbconn, table, columns, threshold=threshold, include_counts=False)
@@ -78,7 +78,7 @@ counts_of_distinct_values(dbconn, table, columns, threshold=threshold, include_c
 # +
 counts_of_distinct_values(dbconn, table, columns=['COVID_indication'], threshold=threshold)
 
-columns = ['Intervention','CurrentStatus']
+columns = ['Intervention','CurrentStatus', 'Count']
 
 for c in columns:
     counts_of_distinct_values(dbconn, table, columns=[c], threshold=threshold)   
