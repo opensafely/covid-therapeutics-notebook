@@ -283,6 +283,7 @@ def compare_two_values(dbconn, tables, columns, join_on=None, threshold=1, where
 
     # summarise results    
     compared = out.copy().groupby("comparison").agg({"difference":"median", "row_count":"sum"}).reset_index()
+    compared2 = out.copy().groupby("comparison").quantile([0.25, 0.75]).unstack().rename(columns={0.25:'Q1', 0.75:'Q3'})
     
     # rename column
     if days_flag==True:
@@ -298,9 +299,8 @@ def compare_two_values(dbconn, tables, columns, join_on=None, threshold=1, where
     compared["%"] = round(100*compared["row_count"]/compared["row_count"].sum(),1)
     compared["row_count"] = compared["row_count"].replace([0,1,2,3,4,5,6,7],"<=7")
     display(compared)
-    
-    
-    
+    display(compared2)
+
     
 def multiple_records(dbconn, table, columns, combinations, where, key_field="patient_id"):
     '''
