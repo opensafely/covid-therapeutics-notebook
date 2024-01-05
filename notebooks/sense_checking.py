@@ -99,7 +99,7 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
     ''' Return distinct values of a column. 
     Also (optionally) return how many times each value appears, unless there are more distinct values than threshold given, then return no. of values, max and min. 
     Optionally filter using a where clause.
-    Row counts are rounded to nearest 5 and any values which appear <=5 times not shown.
+    Row counts are rounded to nearest 5 and any values which appear <=7 times not shown.
     '''
         
     for col in columns:
@@ -119,7 +119,7 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
         
         # count nulls
         try:
-            missing = out.copy().loc[pd.isnull(out[col])]["row_count"].replace([1,2,3,4,5],"1-5").reset_index(drop=True)[0]
+            missing = out.copy().loc[pd.isnull(out[col])]["row_count"].replace([1,2,3,4,5,6,7],"1-7").reset_index(drop=True)[0]
         except:
             missing = 0
             
@@ -141,16 +141,16 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
             display(Markdown(f"There were **{value_count}** different non-missing values"),
                    Markdown(f"and **{missing}** missing values."))
             
-            # If all counts are <=5 and therefore suppressed:
+            # If all counts are <=7 and therefore suppressed:
             if (len(no_nulls) == 0) or (frequency_count==True):
                 # find frequency of each count
                 counts = out.groupby('row_count').count()
-                counts = (10*((counts/10).round(0))).astype(int)
+                counts = (5*((counts/5).round(0))).astype(int)
                 counts = counts.reset_index()
                 counts = counts.rename(columns={col:"Frequency", "row_count":f"No.of rows per {col}"})
                 # suppress unusual counts
                 counts = counts.loc[counts["Frequency"]>0]
-                display(counts, Markdown("Note: counts with frequencies <8 are not shown"))    
+                display(counts, Markdown("Note: counts with frequencies <=7 are not shown"))    
                 
             else:
                 if include_counts==True:
@@ -170,7 +170,7 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
 
                 # also list how many values were suppressed (if any)
                 if suppressed.shape[0] > 0:
-                    display(Markdown(f"There were {suppressed.shape[0]} value(s) with <=5 occurrences (each), not shown above."))
+                    display(Markdown(f"There were {suppressed.shape[0]} value(s) with <=7 occurrences (each), not shown above."))
         
         
         else: # if lots of values, display a sensible summary of the range and the most common value
