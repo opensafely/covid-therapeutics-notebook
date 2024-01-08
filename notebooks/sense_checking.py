@@ -6,7 +6,7 @@ from IPython.display import display, Markdown
 
 import sys
 sys.path.append('../lib/')
-from utilities2 import closing_connection, simple_sql, suppress_and_round
+from utilities2 import closing_connection, simple_sql, suppress_and_round, round_and_suppress
 
 
 def get_schema(dbconn, table, where, supplementary_table_separator=None, export=False):
@@ -80,6 +80,7 @@ def get_schema(dbconn, table, where, supplementary_table_separator=None, export=
                 total_rows = int(5 * round(out_counts["total_rows"][0] / 5))
                 display(Markdown(f"Total rows in {t} {where[w]}: {int(total_rows)}"))
                 out_counts = out_counts.drop(columns=["total_rows"])
+                round_and_suppress(out_counts, f"Missing_Values{w}")
                 out = out.merge(out_counts, on=["TableName","ColumnName"])
 
             display(out.set_index(["TableName","ColumnName"]))
