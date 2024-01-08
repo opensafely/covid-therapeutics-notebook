@@ -40,6 +40,18 @@ def round_and_suppress(df, field):
     df.loc[df[field] <= 5, "n"] = "1-7"
 
 
+def add_percentage_column(df, new_field, field, denominator):
+    """Add a percentage column called `new_field`, found by dividing `field` by `denominator`.
+
+    Suppressed values (ie "1-7") are ignored.  Results are converted to strings and
+    truncated to 2 decimal places.
+
+    See test below for usage.
+    """
+
+    df[new_field] = pd.to_numeric(100 * df.loc[df[field] != "1-7", field] / denominator).round(2)
+    df[new_field] = df[new_field].astype(str).replace("nan", "")
+
 
 def  simple_sql(dbconn, table, col, where):
     ''' extract data from sql'''
@@ -74,4 +86,25 @@ if __name__ == "__main__":
         13: 15,
         14: 15,
     }
+
+    # And now a quick test of add_percentage_column
+    add_percentage_column(df, "%", "n", 60)
+    assert dict(df["%"]) == {
+        0: "",
+        1: "",
+        2: "",
+        3: "",
+        4: "",
+        5: "",
+        6: "",
+        7: "",
+        8: "16.67",
+        9: "16.67",
+        10: "16.67",
+        11: "16.67",
+        12: "16.67",
+        13: "25.0",
+        14: "25.0",
+    }
+
     print("OK")
