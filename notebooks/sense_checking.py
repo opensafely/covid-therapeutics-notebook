@@ -6,7 +6,7 @@ from IPython.display import display, Markdown
 
 import sys
 sys.path.append('../lib/')
-from utilities2 import *
+from utilities2 import closing_connection, simple_sql, suppress_and_round, round_and_suppress, add_percentage_column
 
 
 def get_schema(dbconn, table, where, supplementary_table_separator=None, export=False):
@@ -76,9 +76,12 @@ def get_schema(dbconn, table, where, supplementary_table_separator=None, export=
             
             for w in where:
                 out_counts = value_counts[t][w].reset_index().rename(columns={"index":"ColumnName"})
-                total_rows = out_counts["total_rows"][0]
+                # Round total_rows to nearest 5
+                total_rows = int(5 * round(out_counts["total_rows"][0] / 5))
                 display(Markdown(f"Total rows in {t} {where[w]}: {int(total_rows)}"))
                 out_counts = out_counts.drop(columns=["total_rows"])
+                round_and_suppress(out_counts, f"Missing_Values{w}")
+                add_percentage_column(out_counts, f"Missing_Values_Percentage{w}", f"Missing_Values{w}", total_rows)
                 out = out.merge(out_counts, on=["TableName","ColumnName"])
 
             display(out.set_index(["TableName","ColumnName"]))
