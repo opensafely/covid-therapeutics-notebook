@@ -20,3 +20,6 @@ environ.txt
 .jupyter/
 .local/
 .idea/
+
+# mac
+.DS_Store
