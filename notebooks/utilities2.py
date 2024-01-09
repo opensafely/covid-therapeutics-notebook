@@ -33,8 +33,8 @@ def suppress_and_round(df, field="row_count", keep=False):
 def round_and_suppress(df, field):
     """Another function to apply disclosure control to a column in a dataframe.
 
-    This one rounds all values to the nearest 5, and then replaces any values less than
-    or equal to 5 with the string "1-7".
+    This one rounds all values to the nearest 5, and then replaces any values that were
+    originally less than or equal to 7 with the string "1-7".
     """
     df[field] = (5 * (df[field] / 5).round()).astype(int)
     df.loc[df[field] <= 5, "n"] = "1-7"
