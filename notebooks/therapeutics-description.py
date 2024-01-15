@@ -19,9 +19,9 @@
 #
 # This notebook displays information about the Therapeutics datasetwithin the OpenSAFELY-TPP database. It is part of the technical documentation of the OpenSAFELY platform to help users understand the underlying data and guide analyses. 
 #
-# If you want to see the Python code used to create this notebook, you can [view it on GitHub](https://github.com/opensafely/covid-therapeutics-notebooks/blob/master/notebooks/therapeuticss-description.ipynb).
+# If you want to see the Python code used to create this notebook, you can [view it on GitHub](https://github.com/opensafely/covid-therapeutics-notebook/blob/main/notebooks/therapeutics-description.py).
 #
-# **Note: all row/patient counts are rounded to the nearest 5 and counts <=7 removed**
+# **Note: all row/patient counts are rounded to the nearest 5 and counts 1-7 and in some cases <=7 removed**
 
 
 # +
