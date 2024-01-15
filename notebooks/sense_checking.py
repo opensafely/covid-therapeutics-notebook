@@ -158,7 +158,7 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
                 counts = out.groupby('row_count').count()
                 counts = (5*((counts/5).round(0))).astype(int)
                 counts = counts.reset_index()
-                counts = counts.rename(columns={col:"Frequency (to nearesst 5)", "row_count":f"No.of rows per {col}"})
+                counts = counts.rename(columns={col:"Frequency (to nearest 5)", "row_count":f"No.of rows per {col}"})
                 # suppress unusual counts
                 counts = counts.loc[counts["Frequency (to nearesst 5)"]>5]
                 display(counts, Markdown("Note: counts with frequencies <=7 are not shown"))    
