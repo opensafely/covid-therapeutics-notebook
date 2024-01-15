@@ -519,19 +519,17 @@ def problem_dates(dbconn, table, columns, where=None, valid_years=['202','21','2
     display(Markdown("### Problem dates across all date-like string fields"))
     if where:
         display(Markdown(f" **filtered on {where}**"))
-    display(Markdown(f"In total there were **{len(results)}** problematic date-like values"))
+    display(Markdown(f"In total there were **{len(results)}** different problematic date-like values"))
     
     # display counts by type of problem
     summary = results.reset_index().groupby("problem")[["row_count"]].agg({"count","sum"})
     summary.columns = summary.columns.droplevel()
     summary = summary[["count","sum"]].rename(columns={"count":"no_of_different_values", "sum":"row_count"})
-    summary,_ = suppress_and_round(summary, field="row_count", keep=True)
-    display(summary.replace(0,"<=5"))
+    summary,_ = round_and_suppress(summary, field="row_count")
     
     if return_summary_only:
         return
     
     else:
-        results, _ = suppress_and_round(results[["row_count"]], field="row_count", keep=True)
-        results = results.replace(0,"<=5")
+        results, _ = round_and_suppress(results[["row_count"]], field="row_count")
         display(results.sort_index())
