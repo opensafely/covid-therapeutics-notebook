@@ -17,7 +17,7 @@
 # + [markdown]
 # # COVID therapeutics dataset in OpenSAFELY-TPP
 #
-# This notebook displays information about the Therapeutics dataset within the OpenSAFELY-TPP database. It is part of the technical documentation of the OpenSAFELY platform to help users understand the underlying data and guide analyses. 
+# This notebook displays information about the Therapeutics datasetwithin the OpenSAFELY-TPP database. It is part of the technical documentation of the OpenSAFELY platform to help users understand the underlying data and guide analyses. 
 #
 # If you want to see the Python code used to create this notebook, you can [view it on GitHub](https://github.com/opensafely/covid-therapeutics-notebooks/blob/master/notebooks/therapeuticss-description.ipynb).
 #
@@ -25,11 +25,6 @@
 
 
 # +
-## Import libraries
-
-# %load_ext autoreload
-# %autoreload 2
-
 import pyodbc
 import os
 import pandas as pd
@@ -59,16 +54,14 @@ dbconn = os.environ.get('FULL_DATABASE_URL', None).strip('"')
 
 display(Markdown(f"""This notebook was run on {date.today().strftime('%Y-%m-%d')}. The information below reflects the state of this dataset in OpenSAFELY-TPP as at this date. The last final update of the data was on 28/6/2023."""))
 
-
-# ## Import schema
-
 # +
+## Import schema
+
 table = "Therapeutics"
 where = {"": None,
          "_non_hospitalised": "where COVID_indication='non_hospitalised'"}
 
 get_schema(dbconn, table, where)
-
 # -
 
 # ## Description of General Fields
@@ -84,7 +77,6 @@ columns = ["COVID_indication", "Intervention", "CurrentStatus", "Count"]
 
 counts_of_distinct_values(dbconn, table, columns, threshold=threshold)
 counts_of_distinct_values(dbconn, table, columns, threshold=threshold, where="COVID_indication='non_hospitalised'")
-
 # -
 
 # ## Description of Dates
@@ -99,7 +91,6 @@ counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold, w
 
 # ### Dates outside expected range
 
-# +
 display(Markdown("## Past and future dates"))
 for i in [0,1]:
     counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'2023-06-28'", sort_values=True) 
@@ -107,14 +98,14 @@ for i in [0,1]:
     counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) <'2021-12-16'", sort_values=True)
     counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"COVID_indication='non_hospitalised' AND CAST({columns[i]} AS DATE) <'2021-12-16'", sort_values=True)
 
-# -
 
 # ### Date comparisons
 
 # +
-compare_two_values(dbconn, table, columns=columns, include_counts=True)
-compare_two_values(dbconn, table, columns=columns, where="COVID_indication='non_hospitalised'", include_counts=True)
-
+columns = ["Received", "TreatmentStartDate"]
+ 
+compare_two_values(dbconn, [table], columns=columns, include_counts=True)
+compare_two_values(dbconn, [table], columns=columns, where="COVID_indication='non_hospitalised'", include_counts=True)
 # -
 
 # ## Symptom onset dates and At-Risk groups
@@ -138,8 +129,9 @@ for c, i in zip(columns, interventions):
 
 # -
 
-# ## Distinct risk groups
-    
+
+# ## Distinct Risk Groups
+
 # +
 columns = ["MOL1_high_risk_cohort", "SOT02_risk_cohorts", "CASIM05_risk_cohort"]
 replacement = "Patients with a "
@@ -151,13 +143,10 @@ identify_distinct_strings(dbconn, table, columns, where=f"COVID_indication='non_
 
 # -
 
-# ## Patients with multiple records
+# # Patients with multiple records
 
-# +
-counts_of_distinct_values(dbconn, table, columns=["patient_id"], threshold=50)
-counts_of_distinct_values(dbconn, table, columns=["patient_id"], threshold=50, where=f"COVID_indication='non_hospitalised'")
-
-# -
+counts_of_distinct_values(dbconn, table, columns=["patient_id"], threshold=50, frequency_count=True)
+counts_of_distinct_values(dbconn, table, columns=["patient_id"], threshold=50, where=f"COVID_indication='non_hospitalised'", frequency_count=True)
 
 # ## Further investigation into patients with multiple records - which fields differ in each record?
 
@@ -166,7 +155,5 @@ fields_of_interest = ["AgeAtReceivedDate", "Received", "Intervention", "CurrentS
 combinations = {1: ["Intervention", "Received"],
                 2: ["Intervention", "TreatmentStartDate"],}
 
-multiple_records(dbconn, table, fields_of_interest, combinations)
+multiple_records(dbconn, table, fields_of_interest, combinations, where="")
 multiple_records(dbconn, table, fields_of_interest, combinations, where=f"COVID_indication='non_hospitalised'")
-
-# -

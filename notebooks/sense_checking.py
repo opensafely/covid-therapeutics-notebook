@@ -82,6 +82,7 @@ def get_schema(dbconn, table, where, supplementary_table_separator=None, export=
                 out_counts = out_counts.drop(columns=["total_rows"])
                 round_and_suppress(out_counts, f"Missing_Values{w}")
                 add_percentage_column(out_counts, f"Missing_Values_Percentage{w}", f"Missing_Values{w}", total_rows)
+                out_counts = out_counts.drop(columns=[f"Missing_Values{w}"]).rename(columns={"n":f"Missing_Values{w}"})
                 out = out.merge(out_counts, on=["TableName","ColumnName"])
 
             display(out.set_index(["TableName","ColumnName"]))
@@ -122,9 +123,16 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
         
         # count nulls
         try:
-            missing = out.copy().loc[pd.isnull(out[col])]["row_count"].replace([1,2,3,4,5,6,7],"1-7").reset_index(drop=True)[0]
+            missing = out.copy().loc[pd.isnull(out[col])]["row_count"].reset_index(drop=True)[0]
         except:
             missing = 0
+        missing_rounded = ""
+        if missing >7: # round to nearest 5
+            missing = int(5*(missing/5).round(0)) 
+            missing_rounded = " (to the nearest 5)"
+        elif missing >0 and missing <=7:
+            missing = "1-7"
+        
             
         # now exclude nulls
         no_nulls = out.loc[~pd.isnull(out[col])]
@@ -142,7 +150,7 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
         # For fields with a small range of possible values, list all possible values, with optional counts    
         if (len(no_nulls[col]) <= threshold) or (frequency_count==True):
             display(Markdown(f"There were **{value_count}** different non-missing values"),
-                   Markdown(f"and **{missing}** missing values."))
+                   Markdown(f"and **{missing}** missing values{missing_rounded}."))
             
             # If all counts are <=7 and therefore suppressed:
             if (len(no_nulls) == 0) or (frequency_count==True):
@@ -150,9 +158,9 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
                 counts = out.groupby('row_count').count()
                 counts = (5*((counts/5).round(0))).astype(int)
                 counts = counts.reset_index()
-                counts = counts.rename(columns={col:"Frequency", "row_count":f"No.of rows per {col}"})
+                counts = counts.rename(columns={col:"Frequency (to nearesst 5)", "row_count":f"No.of rows per {col}"})
                 # suppress unusual counts
-                counts = counts.loc[counts["Frequency"]>0]
+                counts = counts.loc[counts["Frequency (to nearesst 5)"]>5]
                 display(counts, Markdown("Note: counts with frequencies <=7 are not shown"))    
                 
             else:
@@ -185,11 +193,11 @@ def counts_of_distinct_values(dbconn, table, columns, threshold=1, where=None, i
                 minv, maxv = no_nulls[col].astype(str).min(), no_nulls[col].astype(str).max()   
             
             display(Markdown(f"There were **{value_count}** different values, between '{minv}' and '{maxv}' (after removing uncommon values)"),
-                   Markdown(f"and **{missing}** missing values."))
+                   Markdown(f"and **{missing}** missing values{missing_rounded}."))
             # find most common value (excluding nulls)
             max_count = no_nulls['row_count'].max()
             most_common = no_nulls.loc[no_nulls["row_count"]==max_count][col].reset_index(drop=True)[0] # return one value, even if 2 or more are tied
-            display(Markdown(f"The most common value was '{most_common}' with **{max_count}** occurrences"))
+            display(Markdown(f"The most common value was '{most_common}' with **{max_count}** occurrences (rounded to the nearest 5)"))
     
 
 def compare_two_values(dbconn, tables, columns, join_on=None, threshold=1, where=None, include_counts=True):
@@ -284,9 +292,10 @@ def compare_two_values(dbconn, tables, columns, join_on=None, threshold=1, where
         display ("Check dtypes")
         return
 
-    # summarise results    
+    # summarise results
     compared = out.copy().groupby("comparison").agg({"difference":"median", "row_count":"sum"}).reset_index()
-    compared2 = out.copy().groupby("comparison").quantile([0.25, 0.75]).unstack().rename(columns={0.25:'Q1', 0.75:'Q3'})
+    compared_q1q3 = out.copy()[["comparison", "difference"]] # select columns needed
+    compared_q1q3 = compared_q1q3.groupby("comparison").quantile([0.25, 0.75]).unstack().rename(columns={0.25:'Q1', 0.75:'Q3'})
     
     # rename column
     if days_flag==True:
@@ -302,7 +311,7 @@ def compare_two_values(dbconn, tables, columns, join_on=None, threshold=1, where
     compared["%"] = round(100*compared["row_count"]/compared["row_count"].sum(),1)
     compared["row_count"] = compared["row_count"].replace([0,1,2,3,4,5,6,7],"<=7")
     display(compared)
-    display(compared2)
+    display(compared_q1q3)
 
     
 def multiple_records(dbconn, table, columns, combinations, where, key_field="patient_id"):
@@ -526,4 +535,3 @@ def problem_dates(dbconn, table, columns, where=None, valid_years=['202','21','2
         results, _ = suppress_and_round(results[["row_count"]], field="row_count", keep=True)
         results = results.replace(0,"<=5")
         display(results.sort_index())
-    
