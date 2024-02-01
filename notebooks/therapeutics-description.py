@@ -15,9 +15,11 @@
 # ---
 
 # + [markdown]
-# # COVID therapeutics dataset in OpenSAFELY-TPP
+# # COVID therapeutics dataset in OpenSAFELY-TPP.
 #
-# This notebook displays information about the Therapeutics datasetwithin the OpenSAFELY-TPP database. It is part of the technical documentation of the OpenSAFELY platform to help users understand the underlying data and guide analyses. 
+# This notebook displays information about the Therapeutics dataset within the OpenSAFELY-TPP database. It is part of the technical documentation of the OpenSAFELY platform to help users understand the underlying data and guide analyses. 
+#
+# This notebook gives a brief overview of the dataset. There are two additional notebooks looking in more detail at outpatients and inpatients. 
 #
 # If you want to see the Python code used to create this notebook, you can [view it on GitHub](https://github.com/opensafely/covid-therapeutics-notebook/blob/main/notebooks/therapeutics-description.py).
 #
@@ -40,7 +42,6 @@ from sense_checking import (
     get_schema,
     identify_distinct_strings,
     multiple_records,
-    problem_dates,
 )
 
 pd.set_option('display.max_colwidth', 250)
@@ -59,7 +60,7 @@ display(Markdown(f"""This notebook was run on {date.today().strftime('%Y-%m-%d')
 ## Import schema
 
 table = "Therapeutics"
-where = {"": None}
+where = {"_total": ""}
 
 get_schema(dbconn, table, where)
 # -
@@ -83,70 +84,3 @@ counts_of_distinct_values(dbconn, table, columns, threshold=threshold)
 columns = ["Received", "TreatmentStartDate"]
 
 counts_of_distinct_values(dbconn, table, columns=columns, threshold=threshold, sort_values=True)
-
-# -
-
-# ### Dates outside expected range
-
-display(Markdown("## Past and future dates"))
-for i in [0,1]:
-    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) >'2023-06-28'", sort_values=True)
-    counts_of_distinct_values(dbconn, table, columns=[columns[i]], threshold=3, where=f"CAST({columns[i]} AS DATE) <'2021-12-16'", sort_values=True)
-
-
-# ### Date comparisons
-
-# +
-columns = ["Received", "TreatmentStartDate"]
- 
-compare_two_values(dbconn, [table], columns=columns, include_counts=True)
-# -
-
-# ## Symptom onset dates and At-Risk groups
-
-# +
-columns = ["MOL1_onset_of_symptoms", "SOT02_onset_of_symptoms", "CASIM05_date_of_symptom_onset"]
-interventions = ['Molnupiravir', 'Sotrovimab', 'Casirivimab and imdevimab']
-thresholds = [50, 50, 1]
-
-for c, i, t in zip(columns, interventions, thresholds):
-    counts_of_distinct_values(dbconn, table, columns=[c], threshold=t,)
-    counts_of_distinct_values(dbconn, table, columns=[c], threshold=t, where=f"Intervention='{i}'")
-
-    valid_years = ['202','21','22']
-return_summary_only = True
-
-problem_dates(dbconn, table, columns=columns, where="COVID_indication='non_hospitalised'", valid_years=valid_years, return_summary_only=return_summary_only)
-
-columns = ["MOL1_high_risk_cohort", "SOT02_risk_cohorts", "CASIM05_risk_cohort"]
-
-for c, i in zip(columns, interventions):
-    counts_of_distinct_values(dbconn, table, columns=[c], threshold=50, where=f"Intervention='{i}'")
-
-# -
-
-
-# ## Distinct Risk Groups
-
-# +
-columns = ["MOL1_high_risk_cohort", "SOT02_risk_cohorts", "CASIM05_risk_cohort"]
-replacement = "Patients with a "
-split_string = ' and '
-merge_all = True
-
-identify_distinct_strings(dbconn, table, columns, replacement=replacement, split_string=split_string, merge_all=merge_all)
-
-# -
-
-# # Patients with multiple records
-
-counts_of_distinct_values(dbconn, table, columns=["patient_id"], threshold=50, frequency_count=True)
-
-# ## Further investigation into patients with multiple records - which fields differ in each record?
-
-# +
-fields_of_interest = ["AgeAtReceivedDate", "Received", "Intervention", "CurrentStatus", "TreatmentStartDate", "Region", "MOL1_high_risk_cohort", "SOT02_risk_cohorts", "CASIM05_risk_cohort"]
-combinations = {1: ["Intervention", "Received"],
-                2: ["Intervention", "TreatmentStartDate"],}
-
-multiple_records(dbconn, table, fields_of_interest, combinations, where="")

@@ -40,7 +40,6 @@ from sense_checking import (
     get_schema,
     identify_distinct_strings,
     multiple_records,
-    problem_dates,
 )
 
 pd.set_option('display.max_colwidth', 250)
@@ -112,11 +111,6 @@ thresholds = [50, 50, 1]
 for c, i, t in zip(columns, interventions, thresholds):
     counts_of_distinct_values(dbconn, table, columns=[c], threshold=t, where="COVID_indication='non_hospitalised'")
     counts_of_distinct_values(dbconn, table, columns=[c], threshold=t, where=f"COVID_indication='non_hospitalised' AND Intervention='{i}'")
-
-valid_years = ['202','21','22']
-return_summary_only = True
-
-problem_dates(dbconn, table, columns=columns, where="COVID_indication='non_hospitalised'", valid_years=valid_years, return_summary_only=return_summary_only)
 
 columns = ["MOL1_high_risk_cohort", "SOT02_risk_cohorts", "CASIM05_risk_cohort"]
 
